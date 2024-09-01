@@ -1,4 +1,5 @@
 # Tạo database
+#abc
 CREATE DATABASE node44;
 USE node44;
 # tạo table
@@ -92,5 +93,6 @@ MODIFY COLUMN user_id INT PRIMARY KEY AUTO_INCREMENT
 # Tương tác với data
 
 # Query (lấy dữ diệu)
+
 
 # Thêm, xóa, sửa
