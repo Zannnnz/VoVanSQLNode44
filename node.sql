@@ -96,3 +96,5 @@ MODIFY COLUMN user_id INT PRIMARY KEY AUTO_INCREMENT
 
 
 # Thêm, xóa, sửa
+#them gi dogit st
+#test
