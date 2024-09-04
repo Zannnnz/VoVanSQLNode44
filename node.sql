@@ -11,6 +11,7 @@ CREATE TABLE users(
 	age INT
 )
 
+
 INSERT INTO users (user_id, full_name, email, pass_word, age) VALUES
 (1, 'John Doe', 'johndoe@example.com', 'password123', 28),
 (2, 'Jane Smith', 'janesmith@example.com', 'password123', 34),
@@ -98,3 +99,5 @@ MODIFY COLUMN user_id INT PRIMARY KEY AUTO_INCREMENT
 # Thêm, xóa, sửa
 #them gi dogit st
 #test
+
+#tesstttttttt
