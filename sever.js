@@ -14,13 +14,18 @@ import express from 'express'
 import pool from './db.js';
 import {OK,INTERNAL_SERVER} from './const.js'
 import rootRoutes from './src/router/root.router.js';
+import cors from 'cors';
 //B2: Tao Object express
 const app = express();
 
 //Them middleware de doc data Json
 app.use(express.json());
+// import cors
+app.use(cors());
 // import rootRoutes
 app.use(rootRoutes);
+
+
 
 //B3: define port cho BE Chay
 //params 1: define port BE
@@ -60,3 +65,4 @@ app.get(`/test-header`,(req,res)=>{
 app.listen(8080, () => {
     console.log("sever online at port 8080");
 });
+
