@@ -15,13 +15,18 @@ import pool from './db.js';
 import {OK,INTERNAL_SERVER} from './const.js'
 import rootRoutes from './src/router/root.router.js';
 import cors from 'cors';
+import cookieParser  from 'cookie-parser';
 //B2: Tao Object express
 const app = express();
 
 //Them middleware de doc data Json
 app.use(express.json());
 // import cors
-app.use(cors());
+app.use(cors({
+    origin:"http://localhost:3000",// cap quyen cho FR
+    credentials: true //cho phep FE lay cookie va luu vao cookie browser
+}));
+app.use(cookieParser());
 // import rootRoutes
 app.use(rootRoutes);
 

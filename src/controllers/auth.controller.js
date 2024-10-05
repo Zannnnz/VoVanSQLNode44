@@ -1,4 +1,4 @@
-import { createToken } from "../config/jwt.js";
+import { createRefToken, createToken } from "../config/jwt.js";
 import transporter from "../config/transporter.js";
 import sequelize from "../models/connect.js";
 import initModels from "../models/init-models.js";
@@ -93,8 +93,20 @@ const login = async (req,res) =>{
         // param 1: tạo payload và lưu vào token
         // param 2: key để tạo token
         // param 3: setting lifetime của token và thuật toán để tạo token
-
         let accesToken = createToken({userId: user.user_id})
+        let refreshToken = createRefToken({userId: user.user_id})
+        await model.users.update({
+            refresh_token:refreshToken
+        },{
+            where:{user_id: user.user_id}
+        });
+        // luu refresh vao cookie
+        res.cookie('refreshToken',refreshToken,{
+            httpOnly:true, // Cookie khong the  truy cap tu javascript
+            secure:false, // de chay duoi localhost
+            sameSite:'Lax', // de dam bao cookie duoc gui trong cac domain khac nhau
+            maxAge: 7 * 24 * 60 * 60 *1000
+        })
         return res.status(200).json({message:"Login succesfully",data : accesToken});
       
     }catch(error){
@@ -127,4 +139,22 @@ const loginFacebook = async (req,res)=>{
         return res.status(500).json({message:"error"})
     }
 }
-export{register,login,loginFacebook};
+
+const extendToken = async (req,res)=>{
+    // Lấy refesh token từ cookie request
+    const refreshToken= req.cookies.refreshToken;
+    if(!refreshToken){
+        return res.status(401)
+    }
+    const checkRefToken= await model.users.findOne({
+        where:{
+            refresh_token: refreshToken
+        }
+    });
+    if(!checkRefToken){
+        return res.status(401)
+    }
+    const newToken = createToken({userId:checkRefToken.user_id})
+    return res.status(200).json({message:"Success",data:newToken})
+}
+export{register,login,loginFacebook,extendToken};
