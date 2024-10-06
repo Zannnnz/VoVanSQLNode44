@@ -7,7 +7,7 @@ const sequelize = new Sequelize(
     {
         host: configDb.host,
         port: configDb.port,
-        dialect: configDb.dialect
+        dialect: "mysql"
     }
 )
 

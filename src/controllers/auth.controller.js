@@ -1,4 +1,4 @@
-import { createRefToken, createToken } from "../config/jwt.js";
+import { createRefToken, createRefTokenAsyncKey, createToken, createTokenAsyncKey } from "../config/jwt.js";
 import transporter from "../config/transporter.js";
 import sequelize from "../models/connect.js";
 import initModels from "../models/init-models.js";
@@ -115,6 +115,65 @@ const login = async (req,res) =>{
 
     
 }
+const loginAsyncKey = async (req,res) =>{
+    try{
+        //B1: lấy email và pass_word từ body request
+
+        //B2: Check user thông qua email (get user từ db)
+
+        //B2.1: Nếu không có user => ra error (user not found)
+
+        //B2.2: Nếu có user => check tiếp pass_word
+
+        //B2.2.1: Nếu password không trùng nhau => ra error password is wrong
+
+        //B2.2.2: Nếu passsword trùng nhau => Tạo acces toke
+
+        let {email,pass_word}=req.body;
+        let user = await model.users.findOne({
+            where:{
+                email
+            }
+            
+        })
+        console.log(user)
+        if(!user){
+            return res.status(400).json({message:"email is worng"});
+        }
+        let CheckPass = bcrypt.compareSync(pass_word,user.pass_word);
+        if(!CheckPass){
+            return res.status(400).json({message:"Password is wrong"});
+        }
+        let payload = {
+            userId: user.user_id
+        }
+        // Tạo token
+        // Fuction sign cuả jwt
+        // param 1: tạo payload và lưu vào token
+        // param 2: key để tạo token
+        // param 3: setting lifetime của token và thuật toán để tạo token
+        let accesToken = createTokenAsyncKey({userId: user.user_id})
+        let refreshToken = createRefTokenAsyncKey({userId: user.user_id})
+        await model.users.update({
+            refresh_token:refreshToken
+        },{
+            where:{user_id: user.user_id}
+        });
+        // luu refresh vao cookie
+        res.cookie('refreshToken',refreshToken,{
+            httpOnly:true, // Cookie khong the  truy cap tu javascript
+            secure:false, // de chay duoi localhost
+            sameSite:'Lax', // de dam bao cookie duoc gui trong cac domain khac nhau
+            maxAge: 7 * 24 * 60 * 60 *1000
+        })
+        return res.status(200).json({message:"Login succesfully",data : accesToken});
+      
+    }catch(error){
+        return res.status(500).json({message: "error"})
+    }
+
+    
+}
 const loginFacebook = async (req,res)=>{
     try{
     // B1: lấy id, email và name từ request
@@ -154,7 +213,8 @@ const extendToken = async (req,res)=>{
     if(!checkRefToken){
         return res.status(401)
     }
-    const newToken = createToken({userId:checkRefToken.user_id})
+    //const newToken = createToken({userId:checkRefToken.user_id})
+    const newToken = createTokenAsyncKey({userId: checkRefToken.user_id})
     return res.status(200).json({message:"Success",data:newToken})
 }
-export{register,login,loginFacebook,extendToken};
+export{register,login,loginFacebook,extendToken,loginAsyncKey};
