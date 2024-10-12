@@ -4,6 +4,7 @@ import sequelize from "../models/connect.js";
 import initModels from "../models/init-models.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import crypto from "crypto"; // lib để tạo random code cho flow forgot password
 const model = initModels(sequelize);
 
 const register= async (req,res,next)=>{
@@ -47,7 +48,7 @@ const register= async (req,res,next)=>{
             if(err){
                 return res.status(500).json({message:"Sending email error"});
             }
-            return res.status(200).json({message:"dang ky thanh cong",data:userNew});
+            return res.status(200).json({message:"Register success",data:userNew});
         })
 
        
@@ -77,7 +78,6 @@ const login = async (req,res) =>{
             }
             
         })
-        console.log(user)
         if(!user){
             return res.status(400).json({message:"email is worng"});
         }
@@ -217,4 +217,94 @@ const extendToken = async (req,res)=>{
     const newToken = createTokenAsyncKey({userId: checkRefToken.user_id})
     return res.status(200).json({message:"Success",data:newToken})
 }
-export{register,login,loginFacebook,extendToken,loginAsyncKey};
+
+const forgotPass = async (req,res)=>{
+    try {
+        //get email from body
+        let {email} = req.body;
+        // kiểm tra email có tồn tại trong db hay không
+        let checkEmail = await model.users.findOne({
+            where:{
+                email
+            }
+        });
+        if(!checkEmail){
+            return res.status(400).json({message:"Email is wrong"});
+        }
+
+        // tạo code
+        let randomCode = crypto.randomBytes(5).toString("hex");
+        // tạo biến lưu expired code
+        let expired = new Date(new Date().getTime() + 1 * 60 * 60 * 1000);
+        // lưu code vào db
+        await model.code.create({
+            code: randomCode,
+            expired
+        })
+        // send email
+        const mailOption = {
+            from: process.env.MAIL_USER,
+            to: email,
+            subject: "Mã xác thực",
+            text: `Hệ thống gửi bạn mã code forgot password`,
+            html: `<h1>Your code verify: ${randomCode}</h1>`
+
+        }
+        // gửi mail
+        transporter.sendMail(mailOption,(err,info)=>{
+            if(err){
+                return res.status(500).json({message:"Sending email error"});
+            }
+            return res.status(200).json({message:"Please check your eamil"});
+        })
+    } catch (error) {
+        return res.status(500).json({message:"Error API forgot password"});
+    }
+}
+const changePassword  = async (req,res)=>{
+    try {
+        let{code,email,newPass} = req.body;
+        // Kiểm tra code có tồn tại trong db không
+        let checkCode = await model.code.findOne({
+            where:{
+                code
+            }
+        })
+        if(!checkCode){
+            return res.status(400).json({message:"Code is wrong"});
+        }
+        // check code có còn expire hay không
+        // Kiểm tra email có tồn tại trong db hay không
+        let checkEmail = await model.users.findOne({
+            where:{
+                email
+            }
+        });
+        if(!checkEmail){
+            return res.status(400).json({message:"Email is wrong"})
+        }
+
+        let hashNewPass= bcrypt.hashSync(newPass,10);
+        checkEmail.pass_word = hashNewPass;
+        checkEmail.save();
+
+        //Remove code sau khi change password thành côn
+        await model.code.destroy({
+            where:{
+                code
+            }
+        })
+        return res.status(200).json({message:"Change password successfully"})
+    } catch (error) {
+        return res.status(500).json({message:"Error change API password"})
+    }
+}
+export{
+    register,
+    login,
+    loginFacebook,
+    extendToken,
+    loginAsyncKey,
+    forgotPass,
+    changePassword
+};

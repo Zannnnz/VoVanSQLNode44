@@ -1,8 +1,8 @@
-import initModels from "../models/init-models.js";
-import sequelize from "../models/connect.js";
-import {getListVideo} from "../controllers/video.controller.js"
-import sinon from 'sinon'
-import {afterEach} from "mocha"
+import initModels from "../../models/init-models.js";
+import sequelize from "../../models/connect.js";
+import {getListVideo} from "../../controllers/video.controller.js"
+import sinon from 'sinon';
+import {afterEach} from "mocha";
 import { expect } from "chai";
 const model = initModels(sequelize);
 //describe de define 1 bo test case cho controller getVideos
@@ -44,5 +44,7 @@ describe('getVideo',()=>{
 
         // kiem tra res.status duoc goi voi 200
         expect(res.status.calledWith(200)).to.be.true;
+        // Kiểm tra đúng data
+        expect(res.json.calledWith(videos)).to.be.true
     })
 })
