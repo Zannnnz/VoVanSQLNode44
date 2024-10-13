@@ -5,8 +5,10 @@ import initModels from "../models/init-models.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import crypto from "crypto"; // lib để tạo random code cho flow forgot password
+import {PrismaClient} from '@prisma/client';
+import speakeasy from 'speakeasy';// lib tạo secret key
 const model = initModels(sequelize);
-
+const prisma = new PrismaClient();
 const register= async (req,res,next)=>{
     try{
         //B! : nhan du lieu
@@ -19,23 +21,37 @@ const register= async (req,res,next)=>{
 
         //email
 
-        const userExist = await model.users.findOne({
+        // const userExist = await model.users.findOne({
+        //     where:{
+        //         email:email
+        //     }
+        // })
+        const userExist = await prisma.users.findFirst({
             where:{
-                email:email
+                email: email,
             }
         })
-        console.log({userExist});
         if(userExist){
             return res.status(400).json({message: "Tai khoan da ton tai",data:null,});
         }
 
         //B3 Them nguoi dung moi vao db
 
-        const userNew = await model.users.create({
-            full_name:fullName,
-            email:email,
-            pass_word: bcrypt.hashSync(pass,10),
-        });
+        // const userNew = await model.users.create({
+        //     full_name:fullName,
+        //     email:email,
+        //     pass_word: bcrypt.hashSync(pass,10),
+        // });
+        // tạo secret cho login 2 lớp
+        const secret = speakeasy.generateSecret({length:15})
+        const userNew = await prisma.users.create({
+            data:{
+                full_name:fullName,
+                email:email,
+                pass_word:bcrypt.hashSync(pass,10),
+                secret: secret.base32
+            }
+        })
         // cấu hình info mail
         const mailOption = {
             from: 'nguyenvovanio55@gmail.com',
