@@ -7,6 +7,7 @@ import jwt from "jsonwebtoken";
 import crypto from "crypto"; // lib để tạo random code cho flow forgot password
 import {PrismaClient} from '@prisma/client';
 import speakeasy from 'speakeasy';// lib tạo secret key
+import { use } from "chai";
 const model = initModels(sequelize);
 const prisma = new PrismaClient();
 const register= async (req,res,next)=>{
@@ -101,6 +102,8 @@ const login = async (req,res) =>{
         if(!CheckPass){
             return res.status(400).json({message:"Password is wrong"});
         }
+        
+
         let payload = {
             userId: user.user_id
         }
@@ -145,7 +148,7 @@ const loginAsyncKey = async (req,res) =>{
 
         //B2.2.2: Nếu passsword trùng nhau => Tạo acces toke
 
-        let {email,pass_word}=req.body;
+        let {email,pass_word,code}=req.body;
         let user = await model.users.findOne({
             where:{
                 email
@@ -160,6 +163,17 @@ const loginAsyncKey = async (req,res) =>{
         if(!CheckPass){
             return res.status(400).json({message:"Password is wrong"});
         }
+        // check code duoc nhap tu request
+        const verified = speakeasy.totp.verify({
+            secret: user.secret,
+            encoding: 'base32',
+            token:code
+        })
+        console.log("asdas", user.secret)
+        if(!verified){
+            return res.status(400).json({message:"Invalid 2FA"});
+        }
+    
         let payload = {
             userId: user.user_id
         }

@@ -19,6 +19,9 @@ import cookieParser  from 'cookie-parser';
 //B2: Tao Object express
 const app = express();
 
+//define middleware de public folder public
+app.use(express.static("."));
+
 //Them middleware de doc data Json
 app.use(express.json());
 // import cors

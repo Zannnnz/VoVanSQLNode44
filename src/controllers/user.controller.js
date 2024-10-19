@@ -137,9 +137,40 @@ const updateUser = async (req,res) =>{
         return res.status(INTERNAL_SERVER).json({message: "error"})
     }
 }
+const uploadAvatar = async (req,res) =>{
+    try {
+        let file = req.file;
+        let userId = req.body.userId;
+        let user = await prisma.users.findFirst({
+            where:{user_id: Number(userId)}
+        })
+        if(!user){
+            return res.status(400).json({message:"User not found"});
+        }
+        // update column avatar trong table users
+        let avatarPath = `/public/imgs/${file.filename}`
+        await prisma.users.update({
+            data:{
+                avatar: avatarPath
+            },
+            where:{
+                user_id: Number(userId)
+            }
+        })
+        return res.status(200).json({
+            data:avatarPath,
+            message:"Upload avatar successfully"
+        });
+    } catch (error) {
+        return res.status(500).json({message:"error api upload avatar"});
+        
+    }
+    
+}
 export {
     createUser,
     getUsers,
     deleteUser,
     updateUser,
+    uploadAvatar
 }
