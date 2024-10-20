@@ -50,20 +50,20 @@ const getUsers =async (req,res) =>{
                 [Op.like]: `%${full_name}%`
                 }
             },
-            include:[
-                {
-                    model:model.video,// chon model ma muon ket bang
-                    as: 'videos',
-                    attributes: ['video_name','user_id'],// chi dinh nhung column nao se hien thi
-                    required:true, // default la left join, required la inner join
-                    include:[
-                        {
-                            model: model.video_comment,
-                            as: 'video_comments'
-                        }
-                    ]
-                }
-            ]
+            // include:[
+            //     {
+            //         model:model.video,// chon model ma muon ket bang
+            //         as: 'videos',
+            //         attributes: ['video_name','user_id'],// chi dinh nhung column nao se hien thi
+            //         required:true, // default la left join, required la inner join
+            //         include:[
+            //             {
+            //                 model: model.video_comment,
+            //                 as: 'video_comments'
+            //             }
+            //         ]
+            //     }
+            // ]
         });
         return res.status(OK).json(data);
     }catch(error){
